@@ -65,7 +65,7 @@ PushShaderMode :: (shader: Shader) #expand {
     `defer EndShaderMode();
 }
 
-PushBlendMode :: (mode: s32) #expand {
+PushBlendMode :: (mode: BlendMode) #expand {
     BeginBlendMode(mode);
     `defer EndBlendMode();
 }

@@ -21,7 +21,10 @@ MAX_DELTA :: 0.2;
 window_width: s32 = 1920;
 window_height: s32 = 1080;
 
-playfield_scale: float = 2.0;
+playfield_width := 32;
+playfield_height := 18;
+
+playfield_scale: float;
 
 config: Config_State;
 input: Input_State;
@@ -63,16 +66,19 @@ main :: () {
     InitWindow(window_width, window_height, "flappyjai");
     defer CloseWindow();
 
+    playfield_scale = min(window_width / cast(float)playfield_width, window_height / cast(float)playfield_height);
+
     time_init(60);
     config_init();
     init_input();
     defer deinit_input();
 
-    init_player(*player, window_width/2.0, window_height/2.0);
+    init_player(*player, 0, 0);
 
     game_camera.target = player.position;
     game_camera.offset = .{window_width / 2.0, window_height / 2.0};
-    game_camera.zoom = 1.0;
+    // game_camera.zoom = 1.0;
+    game_camera.zoom = playfield_scale;
 
     random_seed(cast(u64) to_milliseconds(current_time_monotonic()));
     print("Random seed is %\n\n", context.random_state.high);
@@ -96,7 +102,7 @@ main :: () {
 
 game_simulate :: () {
     update_input();
-    game_camera.target.x = player.position.x;
+    // game_camera.target.x = player.position.x;
 
     for live_emitters update_emitter(it);
 
@@ -110,7 +116,10 @@ render_one_frame :: () {
     { 
         PushMode2D(game_camera);
 
-        for live_emitters draw_emitter(it);
+        {
+            PushBlendMode(.BLEND_ADDITIVE);
+            for live_emitters draw_emitter(it);
+        }
 
         draw_player(*player);
     }

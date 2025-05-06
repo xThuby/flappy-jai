@@ -141,7 +141,7 @@ draw_emitter :: (emitter: *Particle_Emitter) {
         c.a = xx (c.a * alpha);
 
         pos := it.position;
-        s := it.size * window_width * .5;
+        s := it.size;
         src_rect := Rectangle.{0, 0, xx contrail_map.width, xx contrail_map.height};
         dst_rect := Rectangle.{pos.x-s/2.0, pos.y-s/2.0, s, s};
         DrawTexturePro(contrail_map, src_rect, dst_rect, .{0, 0}, 0, c);
