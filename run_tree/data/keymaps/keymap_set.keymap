@@ -1,0 +1,21 @@
+[1]         # Version number; do not delete!
+
+[Main]
+
+C-1     GoToModePlay
+C-2     GoToModeEditor
+
+r       ReloadLevel
+
+# ESC   Quit
+A-F4    Quit
+
+[Editor]
+
+C-s             EditorSaveLevel
+MouseMiddle     EditorViewPan
+Space           EditorViewPan
+MouseWheelUp    EditorZoomIn
+MouseWheelDown  EditorZoomOut
+E               EditorZoomIn
+Q               EditorZoomOut

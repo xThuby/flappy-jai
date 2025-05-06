@@ -1,0 +1,8 @@
+[2] # Version number; do not delete!
+name: "Very nice!"
+filename: "default"
+[COLLIDERS]
+Rect_Collider: 0, 0, 80, 20, 0
+
+[ENTITIES]
+player 6 6
