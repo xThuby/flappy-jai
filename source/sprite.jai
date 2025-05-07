@@ -18,7 +18,7 @@ make_sprite :: (path: string) -> Sprite {
     return result;
 }
 
-draw_sprite :: (sprite: Sprite, position: Vector2, size: Vector2) {
+draw_sprite :: (sprite: Sprite, position: Vector2, size: Vector2, rotation: float) {
     src_rect := Rectangle.{0, 0, xx sprite.width, xx sprite.height};
     dst_rect := Rectangle.{position.x, position.y, size.x, size.y};
     DrawTexturePro(
@@ -26,7 +26,7 @@ draw_sprite :: (sprite: Sprite, position: Vector2, size: Vector2) {
         src_rect,
         dst_rect,
         size * sprite.origin,
-        0,
+        rotation,
         WHITE
     );
 }

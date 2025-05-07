@@ -43,6 +43,16 @@ game_camera: Camera2D;
 editor_font: *Font;
 button_font: *Font;
 
+blocks: [20]Rectangle;
+block_index: int;
+
+timer: float = 2;
+
+score: int = 0;
+score_remainder: float = -4.125;
+
+game_over: bool;
+
 main :: () {
     #if DEBUG {
         defer print("Program exited gracefully.\n");
@@ -75,6 +85,16 @@ main :: () {
 
     init_player(*player, 0, 0);
 
+    for * blocks {
+        pos_x := it_index / 2;
+        it.* = Rectangle.{xx -playfield_width, 4, 2, 12};
+        if it_index % 2 == 0 {
+            it.y = 4;
+        } else {
+            it.y = -4 - 9;
+        }
+    }
+
     game_camera.target = player.position;
     game_camera.offset = .{window_width / 2.0, window_height / 2.0};
     // game_camera.zoom = 1.0;
@@ -87,10 +107,30 @@ main :: () {
 
     while !WindowShouldClose() {
         time_update();
-        if time.delta < MAX_DELTA {
+
+        if time.unscaled_delta < MAX_DELTA {
             game_simulate();
         }
         render_one_frame();
+
+        if game_over && IsKeyPressed(.KEY_R) {
+            game_over = false;
+            player.position = .{0, 0};
+            player.speed = .{0, 0};
+
+            timer = 2.0;
+            score = 0;
+            score_remainder = -4.125;
+            for * blocks {
+                pos_x := it_index / 2;
+                it.* = Rectangle.{xx -playfield_width, 4, 2, 12};
+                if it_index % 2 == 0 {
+                    it.y = 4;
+                } else {
+                    it.y = -4 - 9;
+                }
+            }
+        }
 
         reset_temporary_storage();
     }
@@ -102,9 +142,42 @@ main :: () {
 
 game_simulate :: () {
     update_input();
-    // game_camera.target.x = player.position.x;
+    if IsKeyPressed(.KEY_F) {
+        ifx time.time_scale == 1.0 then time.time_scale = 0.1 else time.time_scale = 1.0;
+    }
+    game_camera.target.x = player.position.x;
 
     for live_emitters update_emitter(it);
+
+    if !game_over {
+        for * blocks {
+            it.x -= move_speed * time.delta;
+        }
+        timer -= time.delta;
+
+        score_remainder += time.delta;
+        while score_remainder > 1 {
+            score_remainder -= 1;
+            score += 1;
+        }
+    }
+    if timer <= 0 {
+        timer += 1.0;
+
+        block1 := *blocks[block_index];
+        block2 := *blocks[block_index+1];
+
+        block1.x = playfield_width / 2 + block1.width;
+        block2.x = playfield_width / 2 + block2.width;
+
+        height := random_get_within_range(-4, 4);
+        gap_size := 6;
+        block1.y = height + gap_size / 2;
+        block2.y = height - block2.height - gap_size / 2;
+
+        block_index += 2;
+        block_index %= blocks.count;
+    }
 
     update_player(*player);
 }
@@ -122,6 +195,33 @@ render_one_frame :: () {
         }
 
         draw_player(*player);
+
+        for blocks {
+            DrawRectangleRec(it, BLUE);
+        }
+    }
+
+    if game_over {
+        y: s32;
+        font_size: s32 = cast(s32)(window_height * .1);
+        text_width := MeasureText("GAME OVER!", font_size);
+        DrawText("GAME OVER!", window_width / 2 - text_width/2, window_height / 2 - font_size / 2, font_size, WHITE);
+        y += font_size;
+
+        font_size = cast(s32)(window_height * .05);
+        score_text := to_c_string(tprint("Final score: %", score),, temp);
+        text_width = MeasureText(score_text, font_size);
+        DrawText(score_text, window_width / 2 - text_width/2, window_height / 2 - font_size / 2 + y, font_size, WHITE);
+        y += font_size;
+
+        font_size = cast(s32)(window_height * .04);
+        text_width = MeasureText("Press R to restart", font_size);
+        c := Fade(RED, sin(time.now * TAU / 2.0) / 2.0 + 0.5);
+        DrawText("Press R to restart", window_width / 2 - text_width/2, window_height / 2 - font_size / 2 + y, font_size, c);
+    } else {
+        font_size: s32 = cast(s32)(window_height * .06);
+        text_width := MeasureText("GAME OVER!", font_size);
+        DrawText(to_c_string(tprint("Score: %", score),, temp), window_width / 2 - text_width/2, font_size / 2, font_size, WHITE);
     }
 }
 
