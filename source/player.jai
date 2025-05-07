@@ -7,6 +7,8 @@ Player :: struct {
 
     emitter: *Particle_Emitter;
 
+    anim_index: int;
+
     move_started: bool;
     radius: float;
 }
@@ -15,7 +17,7 @@ init_player :: (player: *Player, x: float, y: float) {
     player.x = x;
     player.y = y;
 
-    player.sprite = make_sprite("data/sprites/player.png");
+    player.sprite = make_sprite("data/sprites/bird.png");
     player.sprite.origin = .{.5, .5};
     player.radius = .3;
 
@@ -26,7 +28,7 @@ init_player :: (player: *Player, x: float, y: float) {
         position = player.position;
 
         fadeout_period = .2;
-        particles_per_second = 100;
+        particles_per_second = 20;
 
         speed0 = .2;
         speed1 = .5;
@@ -76,7 +78,8 @@ player_move :: (using player: *Player) {
 
     position += speed * time.delta;
 
-    rotation += time.delta * 45;
+    rotation_target := lerp(-45, 45, (speed.y + abs(jump_speed)) / (abs(jump_speed) + fast_fall_speed));
+    rotation = rotation_target;
 
     if input.jump.down {
         consume_buffer(*input.down);
@@ -84,21 +87,39 @@ player_move :: (using player: *Player) {
         jump_effect(player);
     }
 
+    window := 1.9;
+    if speed.y < xx -window {
+        anim_index = 0;
+    } else if speed.y > xx window {
+        anim_index = 2;
+    } else {
+        anim_index = 1;
+    }
+
     approach(*emitter.velocity.x, -move_speed, accel * time.delta);
 
-    for blocks {
+    for pipes {
         if CheckCollisionCircleRec(position, radius, it) {
             kill_player(player);
         }
     }
 
-    if abs(position.y) - radius > playfield_height / 2.0 {
+    if abs(position.y) > ground_rect.y {
         kill_player(player);
     }
 }
 
 draw_player :: (using player: *Player) {
-    draw_sprite(sprite, position, .{1, 1}, rotation);
+    src_rect := Rectangle.{sprite.width / 3.0 * anim_index, 0, xx sprite.width / 3.0, xx sprite.height};
+    dst_rect := Rectangle.{position.x, position.y, 1, 1};
+    DrawTexturePro(
+        sprite.texture,
+        src_rect,
+        dst_rect,
+        sprite.origin,
+        rotation,
+        WHITE
+    );
 }
 
 jump_effect :: (player: *Player) {
@@ -136,7 +157,7 @@ move_speed:     float : 6;
 #scope_file
 
 accel:          float : 3;
-jump_speed:     float : -16;
+jump_speed:     float : -18;
 gravity:        float : 30;
 fall_speed:     float : 8;
 fast_fall_speed:     float : 15;

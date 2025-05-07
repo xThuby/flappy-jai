@@ -33,6 +33,14 @@ time: Time_State;
 data_folder: string;
 
 contrail_map: Texture2D;
+pipe_map: Texture2D;
+ground_map: Texture2D;
+bg_map: Texture2D;
+
+ground_rect: Rectangle;
+
+ground_x_offset: float = 0;
+bg_x_offset: float = 0;
 
 live_emitters: [..]*Particle_Emitter;
 
@@ -43,8 +51,8 @@ game_camera: Camera2D;
 editor_font: *Font;
 button_font: *Font;
 
-blocks: [20]Rectangle;
-block_index: int;
+pipes: [20]Rectangle;
+pipe_index: int;
 
 timer: float = 2;
 
@@ -52,6 +60,18 @@ score: int = 0;
 score_remainder: float = -4.125;
 
 game_over: bool;
+
+init_blocks :: () {
+    for * pipes {
+        pos_x := it_index / 2;
+        it.* = Rectangle.{xx -playfield_width, 4, 2, 12};
+        if it_index % 2 == 0 {
+            it.y = 4;
+        } else {
+            it.y = -4 - 9;
+        }
+    }
+}
 
 main :: () {
     #if DEBUG {
@@ -84,16 +104,10 @@ main :: () {
     defer deinit_input();
 
     init_player(*player, 0, 0);
+    
+    init_blocks();
 
-    for * blocks {
-        pos_x := it_index / 2;
-        it.* = Rectangle.{xx -playfield_width, 4, 2, 12};
-        if it_index % 2 == 0 {
-            it.y = 4;
-        } else {
-            it.y = -4 - 9;
-        }
-    }
+    ground_rect = Rectangle.{-playfield_width / 2.0, playfield_height / 2.0 - 1.5, xx playfield_width, playfield_width * 0.333};
 
     game_camera.target = player.position;
     game_camera.offset = .{window_width / 2.0, window_height / 2.0};
@@ -104,6 +118,13 @@ main :: () {
     print("Random seed is %\n\n", context.random_state.high);
 
     contrail_map = LoadTexture("data/sprites/contrail.png");
+    pipe_map = LoadTexture("data/sprites/pipe-green.png");
+    ground_map = LoadTexture("data/sprites/base.png");
+    bg_map = LoadTexture("data/sprites/background-day.png");
+    defer UnloadTexture(contrail_map);
+    defer UnloadTexture(pipe_map);
+    defer UnloadTexture(ground_map);
+    defer UnloadTexture(bg_map);
 
     while !WindowShouldClose() {
         time_update();
@@ -121,7 +142,7 @@ main :: () {
             timer = 2.0;
             score = 0;
             score_remainder = -4.125;
-            for * blocks {
+            for * pipes {
                 pos_x := it_index / 2;
                 it.* = Rectangle.{xx -playfield_width, 4, 2, 12};
                 if it_index % 2 == 0 {
@@ -147,12 +168,11 @@ game_simulate :: () {
             ifx time.time_scale == 1.0 then time.time_scale = 0.1 else time.time_scale = 1.0;
         }
     }
-    game_camera.target.x = player.position.x;
 
     for live_emitters update_emitter(it);
 
     if !game_over {
-        for * blocks {
+        for * pipes {
             it.x -= move_speed * time.delta;
         }
         timer -= time.delta;
@@ -166,8 +186,8 @@ game_simulate :: () {
     if timer <= 0 {
         timer += 1.0;
 
-        block1 := *blocks[block_index];
-        block2 := *blocks[block_index+1];
+        block1 := *pipes[pipe_index];
+        block2 := *pipes[pipe_index+1];
 
         block1.x = playfield_width / 2 + block1.width;
         block2.x = playfield_width / 2 + block2.width;
@@ -177,8 +197,8 @@ game_simulate :: () {
         block1.y = height + gap_size / 2;
         block2.y = height - block2.height - gap_size / 2;
 
-        block_index += 2;
-        block_index %= blocks.count;
+        pipe_index += 2;
+        pipe_index %= pipes.count;
     }
 
     update_player(*player);
@@ -191,16 +211,58 @@ render_one_frame :: () {
     { 
         PushMode2D(game_camera);
 
+        // Render background
+        {
+            if !game_over bg_x_offset += time.delta * move_speed;
+            repeat := cast(float)(bg_map.width / playfield_width/2.0);
+            src_rect := Rectangle.{bg_x_offset, 0, xx bg_map.width * repeat, xx bg_map.height};
+            dst_rect := Rectangle.{-playfield_width / 2.0, -playfield_height / 2.0, xx playfield_width, xx playfield_height};
+            DrawTexturePro(
+                bg_map,
+                src_rect,
+                dst_rect,
+                .{0, 0},
+                0,
+                WHITE
+            );
+        }
+
+        for pipes {
+            src_rect := Rectangle.{0, 0, xx pipe_map.width, xx pipe_map.height};
+            if it_index % 2 != 0 then src_rect.height *= -1;
+            dst_rect := Rectangle.{it.x, it.y, it.width, it.height};
+            DrawTexturePro(
+                pipe_map,
+                src_rect,
+                dst_rect,
+                .{0, 0},
+                0,
+                WHITE
+            );
+            // DrawRectangleLinesEx(it, 0.1, BLUE);
+        }
+
+        // Render ground texture
+        {
+            if !game_over ground_x_offset += time.delta * move_speed * 21;
+            src_rect := Rectangle.{ground_x_offset, 0, xx ground_map.width * 2.0, xx ground_map.height * 2.0};
+            dst_rect := ground_rect;
+            DrawTexturePro(
+                ground_map,
+                src_rect,
+                dst_rect,
+                .{0, 0},
+                0,
+                WHITE
+            );
+        }
+
         {
             PushBlendMode(.BLEND_ADDITIVE);
             for live_emitters draw_emitter(it);
         }
 
         draw_player(*player);
-
-        for blocks {
-            DrawRectangleRec(it, BLUE);
-        }
     }
 
     if game_over {
