@@ -257,10 +257,9 @@ render_one_frame :: () {
             );
         }
 
-        {
-            PushBlendMode(.BLEND_ADDITIVE);
-            for live_emitters draw_emitter(it);
-        }
+
+        for live_emitters draw_emitter(it);
+
 
         draw_player(*player);
     }

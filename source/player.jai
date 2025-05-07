@@ -147,7 +147,7 @@ jump_effect :: (player: *Player) {
     lifetime1 = 1.4;
 
     color1 = BLACK;
-    color1 = ColorLerp(YELLOW, RED, 0.75);
+    color1 = GREEN; //ColorLerp(YELLOW, RED, 0.75);
 
     array_add(*live_emitters, emitter);
 }
