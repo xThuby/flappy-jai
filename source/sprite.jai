@@ -8,7 +8,7 @@ Sprite :: struct {
 }
 
 make_sprite :: (path: string) -> Sprite {
-    texture := LoadTexture(to_c_string(path));
+    texture := LoadTexture(to_c_string(path,, temp));
 
     result: Sprite;
     result.texture = texture;

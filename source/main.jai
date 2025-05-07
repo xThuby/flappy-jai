@@ -142,8 +142,10 @@ main :: () {
 
 game_simulate :: () {
     update_input();
-    if IsKeyPressed(.KEY_F) {
-        ifx time.time_scale == 1.0 then time.time_scale = 0.1 else time.time_scale = 1.0;
+    #if DEBUG {
+        if IsKeyPressed(.KEY_F) {
+            ifx time.time_scale == 1.0 then time.time_scale = 0.1 else time.time_scale = 1.0;
+        }
     }
     game_camera.target.x = player.position.x;
 
