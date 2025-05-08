@@ -161,7 +161,7 @@ move_speed:     float : 6;
 #scope_file
 
 accel:          float : 3;
-jump_speed:     float : -18;
+jump_speed:     float : -17;
 gravity:        float : 30;
 fall_speed:     float : 8;
 fast_fall_speed:     float : 15;

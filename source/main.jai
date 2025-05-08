@@ -67,6 +67,8 @@ point\_sound: Sound;
 hit\  _sound: Sound;
 die\  _sound: Sound;
 
+my_font: Font;
+
 init_blocks :: () {
     for * pipes {
         pos_x := it_index / 2;
@@ -131,6 +133,8 @@ main :: () {
 
     random_seed(cast(u64) to_milliseconds(current_time_monotonic()));
     print("Random seed is %\n\n", context.random_state.high);
+
+    my_font = LoadFontEx("data/fonts/flappy-font.ttf", 32, cast(*void)0, 250);
 
     contrail_map = LoadTexture("data/sprites/contrail.png");
     pipe_map = LoadTexture("data/sprites/pipe-green.png");
@@ -294,24 +298,24 @@ render_one_frame :: () {
     if game_over {
         y: s32;
         font_size: s32 = cast(s32)(window_height * .1);
-        text_width := MeasureText("GAME OVER!", font_size);
-        DrawText("GAME OVER!", window_width / 2 - text_width/2, window_height / 2 - font_size / 2, font_size, WHITE);
+        text_width := MeasureTextEx(my_font, "GAME OVER!", cast(float)font_size, 0).x;
+        DrawTextEx(my_font, "GAME OVER!", .{window_width / 2.0 - text_width / 2.0, window_height / 2.0 - font_size / 2.0}, cast(float)font_size, 0, WHITE);
         y += font_size;
 
         font_size = cast(s32)(window_height * .05);
         score_text := to_c_string(tprint("Final score: %", score),, temp);
-        text_width = MeasureText(score_text, font_size);
-        DrawText(score_text, window_width / 2 - text_width/2, window_height / 2 - font_size / 2 + y, font_size, WHITE);
+        text_width = MeasureTextEx(my_font, score_text, cast(float)font_size, 0).x;
+        DrawTextEx(my_font, score_text, .{window_width / 2.0 - text_width / 2.0, window_height / 2.0 - font_size / 2.0 + y}, cast(float)font_size, 0, WHITE);
         y += font_size;
 
         font_size = cast(s32)(window_height * .04);
-        text_width = MeasureText("Press R to restart", font_size);
+        text_width = MeasureTextEx(my_font, "Press R to restart", cast(float)font_size, 0).x;
         c := Fade(RED, sin(time.now * TAU / 2.0) / 2.0 + 0.5);
-        DrawText("Press R to restart", window_width / 2 - text_width/2, window_height / 2 - font_size / 2 + y, font_size, c);
+        DrawTextEx(my_font, "Press R to restart", .{window_width / 2.0 - text_width / 2.0, window_height / 2.0 - font_size / 2.0 + y}, cast(float)font_size, 0, c);
     } else {
         font_size: s32 = cast(s32)(window_height * .06);
         text_width := MeasureText("GAME OVER!", font_size);
-        DrawText(to_c_string(tprint("Score: %", score),, temp), window_width / 2 - text_width/2, font_size / 2, font_size, WHITE);
+        DrawTextEx(my_font, to_c_string(tprint("Score: %", score),, temp), Vector2.{ window_width / 2.0 - text_width/2.0, font_size / 2.0 }, cast(float)my_font.baseSize, 0, WHITE);
     }
 }
 
