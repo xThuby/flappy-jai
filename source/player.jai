@@ -104,7 +104,7 @@ player_move :: (using player: *Player) {
         }
     }
 
-    if abs(position.y) > ground_rect.y {
+    if position.y > ground_rect.y || position.y < -playfield_height/2.0 {
         kill_player(player);
     }
 }
