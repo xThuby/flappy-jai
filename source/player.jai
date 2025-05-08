@@ -65,6 +65,8 @@ kill_player :: (using player: *Player) {
     speed.y = jump_speed / 1.5;
     speed.x = -2;
     game_over = true;
+    PlaySound(die_sound);
+    PlaySound(hit_sound);
 }
 
 player_move :: (using player: *Player) {
@@ -85,6 +87,8 @@ player_move :: (using player: *Player) {
         consume_buffer(*input.down);
         speed.y = jump_speed;
         jump_effect(player);
+        PlaySound(swoosh_sound);
+        PlaySound(wing_sound);
     }
 
     window := 1.9;
@@ -104,7 +108,7 @@ player_move :: (using player: *Player) {
         }
     }
 
-    if position.y > ground_rect.y || position.y < -playfield_height/2.0 {
+    if position.y > ground_rect.y || position.y < -playfield_height / 2.0 {
         kill_player(player);
     }
 }

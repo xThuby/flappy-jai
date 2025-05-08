@@ -18,8 +18,8 @@
 
 MAX_DELTA :: 0.2;
 
-window_width: s32 = 1920;
-window_height: s32 = 1080;
+window_width: s32 = 1920/2;
+window_height: s32 = 1080/2;
 
 playfield_width := 32;
 playfield_height := 18;
@@ -61,6 +61,12 @@ score_remainder: float = -4.125;
 
 game_over: bool;
 
+swoosh_sound: Sound;
+wing\ _sound: Sound;
+point\_sound: Sound;
+hit\  _sound: Sound;
+die\  _sound: Sound;
+
 init_blocks :: () {
     for * pipes {
         pos_x := it_index / 2;
@@ -93,8 +99,17 @@ main :: () {
     data_folder = join(executable_path, "data");
     print("data_folder is '%'\n", data_folder);
 
+    #if DEBUG {
+        SetTraceLogLevel(.LOG_WARNING);
+    } else {
+        SetTraceLogLevel(.LOG_ERROR);
+    }
+
     InitWindow(window_width, window_height, "flappyjai");
     defer CloseWindow();
+
+    InitAudioDevice();
+    defer CloseAudioDevice();
 
     playfield_scale = min(window_width / cast(float)playfield_width, window_height / cast(float)playfield_height);
 
@@ -125,6 +140,17 @@ main :: () {
     defer UnloadTexture(pipe_map);
     defer UnloadTexture(ground_map);
     defer UnloadTexture(bg_map);
+
+    swoosh_sound = LoadSound("data/sound/swoosh.ogg");
+    wing\ _sound = LoadSound("data/sound/wing.ogg");
+    point\_sound = LoadSound("data/sound/point.ogg");
+    hit\  _sound = LoadSound("data/sound/hit.ogg");
+    die\  _sound = LoadSound("data/sound/die.ogg");
+    defer UnloadSound(swoosh_sound);
+    defer UnloadSound(wing\ _sound);
+    defer UnloadSound(point\_sound);
+    defer UnloadSound(hit\  _sound);
+    defer UnloadSound(die\  _sound);
 
     while !WindowShouldClose() {
         time_update();
@@ -179,6 +205,7 @@ game_simulate :: () {
 
         score_remainder += time.delta;
         while score_remainder > 1 {
+            PlaySound(point_sound);
             score_remainder -= 1;
             score += 1;
         }
@@ -193,7 +220,7 @@ game_simulate :: () {
         block2.x = playfield_width / 2 + block2.width;
 
         height := random_get_within_range(-4, 4);
-        gap_size := 6;
+        gap_size := 5.5;
         block1.y = height + gap_size / 2;
         block2.y = height - block2.height - gap_size / 2;
 
