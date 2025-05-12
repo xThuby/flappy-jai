@@ -18,8 +18,8 @@
 
 MAX_DELTA :: 0.2;
 
-window_width: s32 = 1920/2;
-window_height: s32 = 1080/2;
+window_width: s32 = 1920;
+window_height: s32 = 1080;
 
 playfield_width := 32;
 playfield_height := 18;
